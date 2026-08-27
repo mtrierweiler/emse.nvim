@@ -1,0 +1,35 @@
+# Neovim swap / backup files
+*.swp
+*.swo
+*.swn
+*.un~
+.netrwhist
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Documentation tags
+doc/tags
+
+# Testing & local dependencies
+/vendor/
+/deps/
+.repro/
+/tmp/
+
+# Optional local user configurations or scratchpads
+.nvimrc
+.exrc
+luacheckrc
+.stylua.toml
+
+docs/
+CONTEXT.md
+run_demo.sh
+demo.js

@@ -1,0 +1,27 @@
+name: CI
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Install Neovim
+        uses: rhysd/action-setup-vim@v1
+        with:
+          neovim: true
+          version: v0.9.0
+
+      - name: Install Dependencies (Plenary & Telescope)
+        run: |
+          git clone --depth 1 https://github.com/nvim-lua/plenary.nvim.git /tmp/plenary.nvim
+          git clone --depth 1 https://github.com/nvim-telescope/telescope.nvim.git /tmp/telescope.nvim
+
+      - name: Run Test Suite
+        run: make test

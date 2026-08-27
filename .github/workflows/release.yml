@@ -1,0 +1,43 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v[0-9]+.[0-9]+.[0-9]+' # Matches v1.0.0, v2.1.4, etc.
+
+jobs:
+  release:
+    name: Create GitHub Release
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # Important: Grants the workflow permission to write releases
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0 # Fetches all tags and history for changelog generation
+
+      - name: Install Neovim
+        uses: rhysd/action-setup-vim@v1
+        with:
+          neovim: true
+          version: v0.9.0
+
+      - name: Install Dependencies
+        run: |
+          git clone --depth 1 https://github.com/nvim-lua/plenary.nvim.git /tmp/plenary.nvim
+          git clone --depth 1 https://github.com/nvim-telescope/telescope.nvim.git /tmp/telescope.nvim
+
+      - name: Run Quality Gate Tests
+        run: make test
+
+      - name: Generate Changelog
+        id: changelog
+        uses: softprops/action-gh-release@v1
+        with:
+          name: Release ${{ github.ref_name }}
+          draft: false
+          prerelease: false
+          generate_release_notes: true # Automatically compiles PRs, commits, and author lists!
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
