@@ -140,42 +140,39 @@ function M.install(callback)
 
     -- Attempt to fetch checksums.txt for SHA-256 verification
     vim.system({ "curl", "-sL", "-o", checksum_file, checksum_url }, {}, function(cs_obj)
-      local verified = false
-      if cs_obj.code == 0 and vim.fn.filereadable(checksum_file) == 1 then
-        local f = io.open(checksum_file, "r")
-        if f then
-          local cs_content = f:read("*a")
-          f:close()
-          os.remove(checksum_file)
+      vim.schedule(function()
+        local verified = false
+        if cs_obj.code == 0 and vim.fn.filereadable(checksum_file) == 1 then
+          local f = io.open(checksum_file, "r")
+          if f then
+            local cs_content = f:read("*a")
+            f:close()
+            os.remove(checksum_file)
 
-          local computed = M.compute_file_sha256(paths.install_path)
-          for line in cs_content:gmatch("[^\r\n]+") do
-            local hash, filename = line:match("(%x+)%s+(%S+)")
-            if filename == asset and computed then
-              if hash:lower() == computed:lower() then
-                verified = true
-              else
-                os.remove(paths.install_path)
-                local err = string.format("Security verification failed! SHA-256 hash mismatch for %s", asset)
-                vim.schedule(function()
+            local computed = M.compute_file_sha256(paths.install_path)
+            for line in cs_content:gmatch("[^\r\n]+") do
+              local hash, filename = line:match("(%x+)%s+(%S+)")
+              if filename == asset and computed then
+                if hash:lower() == computed:lower() then
+                  verified = true
+                else
+                  os.remove(paths.install_path)
+                  local err = string.format("Security verification failed! SHA-256 hash mismatch for %s", asset)
                   if callback then callback(false, err) else vim.notify(err, vim.log.levels.ERROR) end
-                end)
-                return
+                  return
+                end
               end
             end
           end
         end
-      end
 
-      -- Make it executable (Linux / macOS)
-      if os_name ~= "windows" then
-        -- Use os.execute or vim.uv.fs_chmod, as vim.fn.system cannot be called inside fast event callbacks
-        pcall(function()
-          vim.uv.fs_chmod(paths.install_path, 493) -- 493 decimal is 0o755 octal (rwxr-xr-x)
-        end)
-      end
+        -- Make it executable (Linux / macOS)
+        if os_name ~= "windows" then
+          pcall(function()
+            vim.uv.fs_chmod(paths.install_path, 493) -- 493 decimal is 0o755 octal (rwxr-xr-x)
+          end)
+        end
 
-      vim.schedule(function()
         if verified then
           vim.notify("emse.nvim: Installation completed successfully! (SHA-256 Verified)", vim.log.levels.INFO)
         else
