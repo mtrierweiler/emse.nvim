@@ -134,7 +134,7 @@ function M.open()
     local row = math.floor((vim.o.lines - height) / 2)
     local col = math.floor((vim.o.columns - width) / 2)
 
-    M.win = vim.api.nvim_open_win(buf, config.defaults.output.focus, {
+    local win_opts = {
       relative = "editor",
       width = width,
       height = height,
@@ -143,9 +143,13 @@ function M.open()
       border = config.defaults.output.border,
       title = " EMSE Output Logs ",
       title_pos = "center",
-      footer = " [q]: Close  |  [c]: Clear  |  [y]: Copy Logs ",
-      footer_pos = "center",
-    })
+    }
+    if vim.fn.has("nvim-0.10") == 1 then
+      win_opts.footer = " [q]: Close  |  [c]: Clear  |  [y]: Copy Logs "
+      win_opts.footer_pos = "center"
+    end
+
+    M.win = vim.api.nvim_open_win(buf, config.defaults.output.focus, win_opts)
     
     -- Explicitly link the floating window highlights to Standard Telescope Normal Float highlights
     -- NormalFloat is used for background color, FloatBorder for borders.

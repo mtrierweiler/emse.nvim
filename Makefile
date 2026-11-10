@@ -10,5 +10,5 @@ setup:
 	fi
 	@if [ ! -d "/tmp/telescope.nvim" ]; then \
 		echo "Downloading telescope.nvim for testing..."; \
-		git clone --depth 1 https://github.com/nvim-telescope/telescope.nvim.git /tmp/telescope.nvim; \
+		git clone --depth 1 --branch 0.1.x https://github.com/nvim-telescope/telescope.nvim.git /tmp/telescope.nvim; \
 	fi

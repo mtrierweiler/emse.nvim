@@ -16,12 +16,12 @@ jobs:
         uses: rhysd/action-setup-vim@v1
         with:
           neovim: true
-          version: v0.9.0
+          version: v0.10.0
 
       - name: Install Dependencies (Plenary & Telescope)
         run: |
           git clone --depth 1 https://github.com/nvim-lua/plenary.nvim.git /tmp/plenary.nvim
-          git clone --depth 1 https://github.com/nvim-telescope/telescope.nvim.git /tmp/telescope.nvim
+          git clone --depth 1 --branch 0.1.x https://github.com/nvim-telescope/telescope.nvim.git /tmp/telescope.nvim
 
       - name: Run Test Suite
         run: make test

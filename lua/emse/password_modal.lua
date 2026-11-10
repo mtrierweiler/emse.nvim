@@ -13,7 +13,7 @@ function M.prompt(prompt_title, callback)
   local row = math.floor((vim.o.lines - height) / 2) - 1
   col = math.floor((vim.o.columns - width) / 2)
 
-  local win = vim.api.nvim_open_win(buf, true, {
+  local win_opts = {
     relative = "editor",
     width = width,
     height = height,
@@ -22,9 +22,13 @@ function M.prompt(prompt_title, callback)
     border = "rounded",
     title = " " .. (prompt_title or "Enter Accela Password") .. " ",
     title_pos = "center",
-    footer = " [<Enter>]: Confirm | [<Esc>]: Cancel ",
-    footer_pos = "center",
-  })
+  }
+  if vim.fn.has("nvim-0.10") == 1 then
+    win_opts.footer = " [<Enter>]: Confirm | [<Esc>]: Cancel "
+    win_opts.footer_pos = "center"
+  end
+
+  local win = vim.api.nvim_open_win(buf, true, win_opts)
 
   -- Window & Buffer options
   vim.api.nvim_win_set_option(win, "winhl", "Normal:NormalFloat,FloatBorder:FloatBorder")
