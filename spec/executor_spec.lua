@@ -139,4 +139,50 @@ describe("emse.executor", function()
 
     os.remove(path)
   end)
+
+  it("should intercept prompt password signal and trigger password modal", function()
+    local path = vim.fn.tempname() .. ".js"
+    local f = io.open(path, "w")
+    f:write("// Sample")
+    f:close()
+
+    local input_called = false
+    local prompt_msg_received = nil
+    local mock_write_data = nil
+
+    local password_modal = require("emse.password_modal")
+    local original_prompt = password_modal.prompt
+    password_modal.prompt = function(prompt, on_confirm)
+      input_called = true
+      prompt_msg_received = prompt
+      on_confirm("secret123")
+    end
+
+    vim.system = function(cmd, opts, callback)
+      table.insert(system_calls, { cmd = cmd, opts = opts })
+      local sys_obj = {
+        write = function(self, data)
+          mock_write_data = data
+        end
+      }
+      -- Simulate streaming stdout output containing prompt signal
+      if opts.stdout then
+        opts.stdout(nil, "[PROMPT_PASSWORD:Password for admin:]\n[INFO] Log line 1\n")
+      end
+      if callback then
+        callback({ code = 0, stdout = "", stderr = "" })
+      end
+      return sys_obj
+    end
+
+    executor.run_file_path(path)
+    vim.wait(100)
+
+    assert.truthy(input_called)
+    assert.are.same("Password for admin:", prompt_msg_received)
+    assert.are.same("secret123\n", mock_write_data)
+
+    password_modal.prompt = original_prompt
+    os.remove(path)
+  end)
 end)

@@ -13,6 +13,23 @@ local function get_options()
   local state = config.state
   return {
     {
+      id = "active_env",
+      label = string.format("Target Environment: %s", (state.active_agency and state.active_env) and string.format("%s (%s)", state.active_env, state.active_agency) or "NONE"),
+      action = function(prompt_bufnr)
+        actions.close(prompt_bufnr)
+        require("emse.telescope.environments").picker()
+      end,
+    },
+    {
+      id = "clear_env",
+      label = "Clear Target Environment",
+      action = function()
+        state.active_agency = nil
+        state.active_env = nil
+        vim.notify("emse.nvim: Target environment cleared.", vim.log.levels.INFO)
+      end,
+    },
+    {
       id = "tx_mode",
       label = string.format("Database Transaction: %s", state.tx_mode),
       action = function(prompt_bufnr)
@@ -93,7 +110,7 @@ function M.picker(opts)
           if selection then
             local item = selection.value
             -- If it's a nested launcher action, we pass the bufnr
-            if item.id == "init_script" or item.id == "active_template" or item.id == "tx_mode" then
+            if item.id == "init_script" or item.id == "active_template" or item.id == "tx_mode" or item.id == "active_env" then
               item.action(prompt_bufnr)
             else
               actions.close(prompt_bufnr)

@@ -9,7 +9,7 @@ local M = {}
 
 --- Parse ~/.config/emsexec/config.json to discover configurations
 --- @return table Array of discovered { agency = string, env = string } environments
-local function discover_environments()
+function M.discover_environments()
   local home = os.getenv("HOME") or os.getenv("USERPROFILE")
   local config_file = home .. "/.config/emsexec/config.json"
 
@@ -55,7 +55,7 @@ end
 --- @param opts table|nil Telescope options
 function M.picker(opts)
   opts = opts or {}
-  local envs = discover_environments()
+  local envs = M.discover_environments()
 
   if #envs == 0 then
     vim.notify("emse.nvim: No environments found in ~/.config/emsexec/config.json. Run 'emsexec config add' first.", vim.log.levels.WARN)
@@ -67,9 +67,14 @@ function M.picker(opts)
     finder = finders.new_table({
       results = envs,
       entry_maker = function(entry)
+        local is_active = (config.state.active_agency == entry.agency and config.state.active_env == entry.env)
+        local display = entry.display
+        if is_active then
+          display = "* " .. display
+        end
         return {
           value = entry,
-          display = entry.display,
+          display = display,
           ordinal = entry.display,
         }
       end,
@@ -77,8 +82,8 @@ function M.picker(opts)
     sorter = conf.generic_sorter(opts),
     attach_mappings = function(prompt_bufnr, map)
       actions.select_default:replace(function()
-        actions.close(prompt_bufnr)
         local selection = action_state.get_selected_entry()
+        actions.close(prompt_bufnr)
         if selection then
           local item = selection.value
           config.state.active_agency = item.agency

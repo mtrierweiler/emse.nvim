@@ -56,4 +56,16 @@ describe("emse.installer", function()
     -- Restore executable mock
     vim.fn.executable = original_executable
   end)
+
+  it("should correctly compute SHA-256 hash of a file", function()
+    local temp_path = vim.fn.tempname()
+    local f = io.open(temp_path, "w")
+    f:write("hello world")
+    f:close()
+
+    local computed = installer.compute_file_sha256(temp_path)
+    assert.are.same("b94d27b9934d3e08a52e52d7da7dabfac484efe37a5380ee9088f7ace2efcde9", computed)
+
+    os.remove(temp_path)
+  end)
 end)

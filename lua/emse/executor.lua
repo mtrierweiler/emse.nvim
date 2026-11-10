@@ -12,6 +12,10 @@ local function write_temp_script(lines)
   if f then
     f:write(table.concat(lines, "\n"))
     f:close()
+    -- Restrict permissions to owner read/write only (0o600 / 384)
+    pcall(function()
+      vim.uv.fs_chmod(temp_path, 384)
+    end)
   end
   return temp_path
 end
@@ -97,24 +101,64 @@ local function execute_run(target_path, is_temp, bypass_inits)
   ui.append("------------------------------------------")
 
   -- Asynchronously run emsexec
-  vim.system({ binary, unpack(args) }, {
+  local proc
+  local line_buf = ""
+
+  local function process_line(line)
+    local prompt_text = line:match("^%[PROMPT_PASSWORD:(.+)%]")
+    if prompt_text then
+      vim.schedule(function()
+        require("emse.password_modal").prompt(prompt_text, function(password)
+          if proc and proc.write then
+            if password and password ~= "" then
+              proc:write(password .. "\n")
+            else
+              proc:write("\n")
+            end
+          end
+        end)
+      end)
+    else
+      vim.schedule(function()
+        ui.append(line)
+      end)
+    end
+  end
+
+  proc = vim.system({ binary, unpack(args) }, {
     text = true,
+    stdin = true,
+    stdout = function(err, data)
+      if err or not data then return end
+      line_buf = line_buf .. data
+      while true do
+        local pos = line_buf:find("\n")
+        if not pos then break end
+        local line = line_buf:sub(1, pos - 1)
+        line_buf = line_buf:sub(pos + 1)
+        process_line(line)
+      end
+    end,
+    stderr = function(err, data)
+      if err or not data then return end
+      vim.schedule(function()
+        ui.append(data)
+      end)
+    end,
   }, function(obj)
+    -- Flush any remaining buffered stdout line
+    if line_buf and line_buf ~= "" then
+      process_line(line_buf)
+      line_buf = ""
+    end
+
     -- Cleanup visual selections / temporary scripts safely
     if is_temp then
       os.remove(target_path)
     end
 
-    -- Format standard output streams
+    -- Format completion output
     vim.schedule(function()
-      if obj.stdout and obj.stdout ~= "" then
-        ui.append(obj.stdout)
-      end
-
-      if obj.stderr and obj.stderr ~= "" then
-        ui.append(obj.stderr)
-      end
-
       if obj.code == 0 then
         ui.append("[SUCCESS] Execution Completed Successfully.")
       else

@@ -15,6 +15,8 @@ describe("emse.config", function()
     assert.are.same(true, config.defaults.output.focus)
     assert.are.same("Always Rollback", config.defaults.execute_defaults.tx_mode)
     assert.are.same(nil, config.defaults.execute_defaults.init_script)
+    assert.are.same(nil, config.defaults.execute_defaults.agency)
+    assert.are.same(nil, config.defaults.execute_defaults.env)
     assert.are.same("<cr>", config.defaults.telescope_mappings.initializers.edit)
     assert.are.same("s", config.defaults.telescope_mappings.initializers.select)
     assert.are.same("%", config.defaults.telescope_mappings.initializers.new)
@@ -47,7 +49,9 @@ describe("emse.config", function()
       },
       execute_defaults = {
         tx_mode = "Commit If Successful",
-        init_script = "/global/init.js"
+        init_script = "/global/init.js",
+        agency = "TEST_AGENCY",
+        env = "STAGING"
       }
     })
 
@@ -59,6 +63,8 @@ describe("emse.config", function()
 
     assert.are.same("Commit If Successful", config.state.tx_mode)
     assert.are.same("/global/init.js", config.state.init_script)
+    assert.are.same("TEST_AGENCY", config.state.active_agency)
+    assert.are.same("STAGING", config.state.active_env)
   end)
 
   it("should allow runtime updates to state without touching defaults", function()

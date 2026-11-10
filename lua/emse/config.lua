@@ -14,6 +14,8 @@ M.defaults = {
     tx_mode = "Always Rollback",
     init_script = nil, -- Optional workspace default init script path
     active_template = nil, -- Optional workspace default active template path
+    agency = nil,
+    env = nil,
   },
   telescope_mappings = {
     initializers = {
@@ -110,6 +112,8 @@ function M.setup(opts)
   M.defaults = vim.tbl_deep_extend("force", M.defaults, opts or {})
 
   -- Initialize runtime session state with execution defaults
+  M.state.active_agency = M.defaults.execute_defaults.agency
+  M.state.active_env = M.defaults.execute_defaults.env
   M.state.tx_mode = M.defaults.execute_defaults.tx_mode
   M.state.init_script = M.defaults.execute_defaults.init_script
   M.state.active_template = M.defaults.execute_defaults.active_template

@@ -19,6 +19,9 @@ local function get_or_create_buf()
   vim.api.nvim_buf_set_option(M.buf, "buftype", "nofile")
   vim.api.nvim_buf_set_option(M.buf, "swapfile", false)
   vim.api.nvim_buf_set_option(M.buf, "bufhidden", "hide")
+  vim.api.nvim_buf_set_option(M.buf, "buflisted", false)
+  vim.api.nvim_buf_set_option(M.buf, "undolevels", -1)
+  vim.api.nvim_buf_set_option(M.buf, "modeline", false)
 
   -- Register keymaps inside the log buffer
   local opts = { silent = true, buffer = M.buf }
